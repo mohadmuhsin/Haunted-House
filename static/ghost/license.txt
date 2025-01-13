@@ -1,0 +1,11 @@
+Model Information:
+* title:	Stylized Ghost model
+* source:	https://sketchfab.com/3d-models/stylized-ghost-model-2eae7ed3c8b64d3a94b4478523749bfb
+* author:	_BrightShotGames (https://sketchfab.com/_BrightShotGames)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Stylized Ghost model" (https://sketchfab.com/3d-models/stylized-ghost-model-2eae7ed3c8b64d3a94b4478523749bfb) by _BrightShotGames (https://sketchfab.com/_BrightShotGames) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
