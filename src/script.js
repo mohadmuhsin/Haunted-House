@@ -4,13 +4,17 @@ import { Timer } from "three/addons/misc/Timer.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import GUI from "lil-gui";
 import { Sky } from "three/examples/jsm/objects/Sky";
+import {gsap} from 'gsap'  
+
+
 
 /**
  * Base
  */
 // Debug
 const gui = new GUI();
-const audio = new Audio("./ghost-girl-in-my-room-158693 (mp3cut.net).mp3");
+
+const audio = new Audio("./ghost-whispers(chosic.com).mp3");
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
 
@@ -157,28 +161,25 @@ const backgroundMusic = {
   value: false,
 };
 
-gui
-  .add(floor.material, "displacementScale")
-  .min(0)
-  .max(1)
-  .step(0.001)
-  .name("floorDisplacement");
-gui
-  .add(floor.material, "displacementBias")
-  .min(-1)
-  .max(1)
-  .step(0.001)
-  .name("floorDisplacement");
+// gui
+//   .add(floor.material, "displacementScale")
+//   .min(0)
+//   .max(1)
+//   .step(0.001)
+//   .name("floorDisplacement");
+// gui
+//   .add(floor.material, "displacementBias")
+//   .min(-1)
+//   .max(1)
+//   .step(0.001)
+//   .name("floorDisplacement");
 gui.add(backgroundMusic, "value").onChange((value) => {
   if ( value) {
-    console.log(value, "if")
     audio.play();
   } else {
-    console.log(value, "else")
-
     audio.pause();
   }
-});
+}).name('Audio');
 
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
@@ -303,7 +304,7 @@ for (let i = 0; i < 30; i++) {
  * Lights
  */
 // Ambient light
-const ambientLight = new THREE.AmbientLight("#86cdff", 0.275);
+const ambientLight = new THREE.AmbientLight(0x222222, 0.275);
 scene.add(ambientLight);
 
 // Directional light
@@ -315,6 +316,13 @@ scene.add(directionalLight);
 const doorLight = new THREE.PointLight("#ff7d46", 5);
 doorLight.position.set(0, 2.2, 2.5);
 house.add(doorLight);
+setInterval(() => {
+  doorLight.intensity = Math.random() * 5 
+  doorLight.shadow.bias = Math.random() * 0.01
+   
+}, 500);
+
+// gsap.to(door.rotation, { y: Math.PI / 6, duration: 2, yoyo: true, repeat: -1, ease: "power2.inOut" });
 
 /**
  * Ghost
@@ -324,10 +332,17 @@ const ghost2 = new THREE.PointLight("#ff0088", 6);
 const ghost3 = new THREE.PointLight("#ff0000", 6);
 const gltfLoader = new GLTFLoader();
 let ghost4;
-gltfLoader.load("./ghost_baby/scene.gltf", (gltf) => {
-  ghost4 = gltf.scene;
-  ghost4.scale.set(0.01, 0.01, 0.01);
+let mixer;
+
+gltfLoader.load("./crow_ascend/scene.gltf", (gltf) => {
+  ghost4 = gltf.scene; 
+  ghost4.scale.set(0.1, 0.1, 0.1);
   ghost4.position.y = 1.5;
+  
+  mixer = new THREE.AnimationMixer(ghost4)
+
+  const action = mixer.clipAction(gltf.animations[0])
+  action.play()
   house.add(ghost4);
 });
 house.add(ghost1, ghost2, ghost3);
@@ -393,7 +408,8 @@ directionalLight.castShadow = true;
 ghost1.castShadow = true;
 ghost2.castShadow = true;
 ghost3.castShadow = true;
-
+// ghostShadow.material.opacity = Math.random() * 0.5;
+ 
 // ghost4.castShadow = true
 
 // objects
@@ -414,6 +430,9 @@ directionalLight.shadow.camera.left = -9;
 directionalLight.shadow.camera.right = 9;
 directionalLight.shadow.camera.near = 1;
 directionalLight.shadow.camera.far = 17;
+
+
+
 
 ghost1.shadow.mapSize.height = 256;
 ghost1.shadow.mapSize.width = 256;
@@ -441,7 +460,27 @@ sky.material.uniforms["sunPosition"].value.set(0.3, -0.038, -0.95);
 sky.scale.set(100, 100, 100);
 scene.add(sky);
 
-scene.fog = new THREE.FogExp2("#0d333e", 0.1);
+gltfLoader.load('./psx_dead_tree_pack/scene.gltf',(gltf) => {
+  gltf.scene.scale.setScalar(0.5)
+  gltf.scene.position.z = -0.6
+  gltf.scene.position.x = -0.5
+
+  scene.add(gltf.scene)
+})
+
+
+gltfLoader.load('./broken_coffin/scene.gltf',(gltf) => {
+  gltf.scene.scale.setScalar(0.03)
+  gltf.scene.position.set(2, 0, 3.5)
+  scene.add(gltf.scene)
+})
+
+
+
+scene.fog = new THREE.FogExp2(0x222222, 0.1);
+
+
+
 
 /**
  * Animate
@@ -452,6 +491,8 @@ const tick = () => {
   // Timer
   timer.update();
   const elapsedTime = timer.getElapsed();
+  if(mixer)
+    mixer.update(elapsedTime * 0.001) 
 
   const ghost4Angle =
     elapsedTime * 0.5; /* multiplying to get low value, it reduce the speed */
@@ -460,6 +501,20 @@ const tick = () => {
     ghost4.position.z = -Math.sin(ghost4Angle) * 4;
     // ghost4.position.y = Math.sin(ghost4Angle  ) * Math.sin(ghost4Angle *2.34  ) * Math.sin(ghost4Angle * 3.45 )
   }
+
+  const direction = new THREE.Vector3(
+    Math.cos(ghost4Angle ),
+    0,
+    Math.sin(ghost4Angle)
+  );
+  direction.normalize();
+
+  const target = new THREE.Vector3(
+    ghost4?.position.x + (direction.x * 0.5),
+    // ghost4?.position.y + direction.y,
+    ghost4?.position.z - (direction.z * 0.5)
+  );
+
 
   const ghost1Angle = elapsedTime * 0.5;
   ghost1.position.x = -Math.cos(ghost1Angle) * 4;
