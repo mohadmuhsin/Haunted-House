@@ -161,18 +161,6 @@ const backgroundMusic = {
   value: false,
 };
 
-// gui
-//   .add(floor.material, "displacementScale")
-//   .min(0)
-//   .max(1)
-//   .step(0.001)
-//   .name("floorDisplacement");
-// gui
-//   .add(floor.material, "displacementBias")
-//   .min(-1)
-//   .max(1)
-//   .step(0.001)
-//   .name("floorDisplacement");
 gui.add(backgroundMusic, "value").onChange((value) => {
   if ( value) {
     audio.play();
@@ -322,30 +310,26 @@ setInterval(() => {
    
 }, 500);
 
-// gsap.to(door.rotation, { y: Math.PI / 6, duration: 2, yoyo: true, repeat: -1, ease: "power2.inOut" });
-
 /**
  * Ghost
  */
-const ghost1 = new THREE.PointLight("#8800ff", 6);
+// const ghost1 = new THREE.PointLight("#8800ff", 6);
 const ghost2 = new THREE.PointLight("#ff0088", 6);
 const ghost3 = new THREE.PointLight("#ff0000", 6);
 const gltfLoader = new GLTFLoader();
 let ghost4;
-let mixer;
-
-gltfLoader.load("./crow_ascend/scene.gltf", (gltf) => {
+let mixers=[];
+gltfLoader.load("./ghost.glb", (gltf) => {
   ghost4 = gltf.scene; 
-  ghost4.scale.set(0.1, 0.1, 0.1);
-  ghost4.position.y = 1.5;
-  
-  mixer = new THREE.AnimationMixer(ghost4)
-
+  ghost4.scale.set(0.5, 0.5, 0.5);
+  ghost4.position.y = 1;
+  let mixer = new THREE.AnimationMixer(ghost4)
+  mixers.push(mixer) 
   const action = mixer.clipAction(gltf.animations[0])
   action.play()
   house.add(ghost4);
 });
-house.add(ghost1, ghost2, ghost3);
+house.add(  ghost2, ghost3);
 
 /**
  * Sizes
@@ -405,7 +389,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 // cast and recieves
 directionalLight.castShadow = true;
-ghost1.castShadow = true;
+// ghost1.castShadow = true;
 ghost2.castShadow = true;
 ghost3.castShadow = true;
 // ghostShadow.material.opacity = Math.random() * 0.5;
@@ -432,12 +416,6 @@ directionalLight.shadow.camera.near = 1;
 directionalLight.shadow.camera.far = 17;
 
 
-
-
-ghost1.shadow.mapSize.height = 256;
-ghost1.shadow.mapSize.width = 256;
-ghost1.shadow.camera.far = 10;
-
 ghost2.shadow.mapSize.height = 256;
 ghost2.shadow.mapSize.width = 256;
 ghost2.shadow.camera.far = 10;
@@ -460,18 +438,36 @@ sky.material.uniforms["sunPosition"].value.set(0.3, -0.038, -0.95);
 sky.scale.set(100, 100, 100);
 scene.add(sky);
 
-gltfLoader.load('./psx_dead_tree_pack/scene.gltf',(gltf) => {
-  gltf.scene.scale.setScalar(0.5)
-  gltf.scene.position.z = -0.6
-  gltf.scene.position.x = -0.5
 
-  scene.add(gltf.scene)
-})
+/* Trees */
+gltfLoader.load('./dark_tree_-_dol_guldur.glb', (gltf) => {
+  const originalModel = gltf.scene;
+  originalModel.scale.setScalar(0.05);
+  originalModel.position.set(-5, 0, 3);
 
+  scene.add(originalModel);
 
+  // Cloned model
+  const clonedModel = originalModel.clone(true);
+  clonedModel.position.set(5, 0, 3); 
+
+  scene.add(clonedModel);
+});
+
+/* coffin */
 gltfLoader.load('./broken_coffin/scene.gltf',(gltf) => {
   gltf.scene.scale.setScalar(0.03)
   gltf.scene.position.set(2, 0, 3.5)
+  scene.add(gltf.scene)
+})
+
+/* skull */
+gltfLoader.load('./halloween_skull/scene.gltf',(gltf) => {
+  gltf.scene.scale.setScalar(0.1)
+  // gltf.scene.position.z = 
+  gltf.scene.position.x = 1
+  gltf.scene.position.z = 3.9
+  gltf.scene.position.y = 0.2
   scene.add(gltf.scene)
 })
 
@@ -491,11 +487,13 @@ const tick = () => {
   // Timer
   timer.update();
   const elapsedTime = timer.getElapsed();
-  if(mixer)
-    mixer.update(elapsedTime * 0.001) 
+  if(mixers.length>0)
+    mixers.forEach((mixer) => {
+      mixer.update(elapsedTime * 0.001) 
+  })
 
   const ghost4Angle =
-    elapsedTime * 0.5; /* multiplying to get low value, it reduce the speed */
+    -elapsedTime * 0.2; /* multiplying to get low value, it reduce the speed */
   if (ghost4?.position) {
     ghost4.position.x = -Math.cos(ghost4Angle) * 4;
     ghost4.position.z = -Math.sin(ghost4Angle) * 4;
@@ -503,26 +501,26 @@ const tick = () => {
   }
 
   const direction = new THREE.Vector3(
-    Math.cos(ghost4Angle ),
+   - Math.cos(ghost4Angle ),
     0,
-    Math.sin(ghost4Angle)
+   - Math.sin(ghost4Angle)
   );
   direction.normalize();
-
+ 
   const target = new THREE.Vector3(
     ghost4?.position.x + (direction.x * 0.5),
-    // ghost4?.position.y + direction.y,
+    ghost4?.position.y + direction.y,
     ghost4?.position.z - (direction.z * 0.5)
   );
 
 
-  const ghost1Angle = elapsedTime * 0.5;
-  ghost1.position.x = -Math.cos(ghost1Angle) * 4;
-  ghost1.position.z = -Math.sin(ghost1Angle) * 4;
-  ghost1.position.y =
-    Math.sin(ghost1Angle) *
-    Math.sin(ghost4Angle * 2.34) *
-    Math.sin(ghost4Angle * 3.45);
+  // const ghost1Angle = elapsedTime * 0.5;
+  // ghost1.position.x = -Math.cos(ghost1Angle) * 4;
+  // ghost1.position.z = -Math.sin(ghost1Angle) * 4;
+  // ghost1.position.y =
+  //   Math.sin(ghost1Angle) *
+  //   Math.sin(ghost4Angle * 2.34) *
+  //   Math.sin(ghost4Angle * 3.45);
 
   const ghost2Angle = -elapsedTime * 0.38;
   ghost2.position.x = -Math.cos(ghost2Angle) * 5;
@@ -536,7 +534,7 @@ const tick = () => {
   ghost3.position.x = -Math.cos(ghost3Angle) * 6;
   ghost3.position.z = -Math.sin(ghost3Angle) * 6;
   ghost3.position.y =
-    Math.sin(ghost1Angle) *
+    Math.sin(ghost2Angle) *
     Math.sin(ghost4Angle * 2.34) *
     Math.sin(ghost4Angle * 3.45);
 
